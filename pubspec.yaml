@@ -46,6 +46,7 @@ dependencies:
   path_provider: ^2.1.6
   provider: ^6.1.5+1
   supabase_flutter: ^2.15.0
+  url_strategy: ^0.3.0
 
 dev_dependencies:
   flutter_test:
