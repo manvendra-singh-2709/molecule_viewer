@@ -1,14 +1,5 @@
-import 'dart:js_interop';
-import 'dart:ui_web' as ui_web;
-
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:web/web.dart' as web;
-
-@JS('showCameraVideo')
-external JSBoolean _showCameraVideo();
-
-@JS('hideCameraVideo')
-external JSBoolean _hideCameraVideo();
 
 class CameraBackground extends StatefulWidget {
   const CameraBackground({super.key});
@@ -18,54 +9,54 @@ class CameraBackground extends StatefulWidget {
 }
 
 class _CameraBackgroundState extends State<CameraBackground> {
-  static const String viewType = 'hand-tracking-camera-view';
-  static bool _registered = false;
+  CameraController? controller;
 
   @override
   void initState() {
     super.initState();
+    initCamera();
+  }
 
-    _showCameraVideo();
+  Future<void> initCamera() async {
+    final List<CameraDescription> cameras = await availableCameras();
 
-    if (!_registered) {
-      _registered = true;
+    if (cameras.isEmpty) return;
 
-      ui_web.platformViewRegistry.registerViewFactory(
-        viewType,
-        (int viewId) {
-          final web.Element? element =
-              web.document.getElementById('handTrackingVideo');
+    controller = CameraController(
+      cameras.first,
+      ResolutionPreset.medium,
+      enableAudio: false,
+    );
 
-          if (element is web.HTMLVideoElement) {
-            _showCameraVideo();
-            return element;
-          }
+    await controller!.initialize();
 
-          final web.HTMLDivElement div = web.HTMLDivElement()
-            ..textContent = 'Camera not ready';
-
-          div.style.width = '100%';
-          div.style.height = '100%';
-          div.style.backgroundColor = 'black';
-          div.style.color = 'white';
-          div.style.display = 'flex';
-          div.style.alignItems = 'center';
-          div.style.justifyContent = 'center';
-
-          return div;
-        },
-      );
+    if (mounted) {
+      setState(() {});
     }
   }
 
   @override
   void dispose() {
-    _hideCameraVideo();
+    controller?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return const HtmlElementView(viewType: viewType);
+    if (controller == null || !controller!.value.isInitialized) {
+      return const ColoredBox(
+        color: Colors.black,
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return Center(
+      child: AspectRatio(
+        aspectRatio: controller!.value.aspectRatio,
+        child: CameraPreview(controller!),
+      ),
+    );
   }
 }

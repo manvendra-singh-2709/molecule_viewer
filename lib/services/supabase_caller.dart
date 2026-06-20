@@ -112,4 +112,73 @@ class SupabaseCaller {
       rethrow;
     }
   }
+
+  static Future<List<StructureInfo>> getStructuresByType({
+    required String type,
+    String table = 'Structures',
+  }) async {
+    final List<dynamic> result = await _client
+        .from(table)
+        .select()
+        .eq('type', type)
+        .order('name');
+
+    return result
+        .map((dynamic e) => StructureInfo.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  static Future<void> deleteStructureEverywhere({
+    required StructureInfo structure,
+    String table = 'Structures',
+  }) async {
+    final String storagePath = '${structure.type}/${structure.name}';
+
+    Uint8List? backupBytes;
+    Map<String, dynamic>? backupRow;
+
+    try {
+      final List<dynamic> rows = await _client
+          .from(table)
+          .select()
+          .eq('id', structure.id)
+          .limit(1);
+
+      if (rows.isEmpty) {
+        throw Exception('Table row not found.');
+      }
+
+      backupRow = rows.first as Map<String, dynamic>;
+
+      backupBytes = await _client.storage
+          .from(SupabaseService.structuresBucket)
+          .download(storagePath);
+
+      await _client.storage.from(SupabaseService.structuresBucket).remove([
+        storagePath,
+      ]);
+
+      await _client.from(table).delete().eq('id', structure.id);
+    } catch (error) {
+      if (backupBytes != null) {
+        try {
+          await _client.storage
+              .from(SupabaseService.structuresBucket)
+              .uploadBinary(
+                storagePath,
+                backupBytes,
+                fileOptions: const FileOptions(upsert: true),
+              );
+        } catch (_) {}
+      }
+
+      if (backupRow != null) {
+        try {
+          await _client.from(table).upsert(backupRow);
+        } catch (_) {}
+      }
+
+      rethrow;
+    }
+  }
 }

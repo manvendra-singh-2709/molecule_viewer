@@ -1,4 +1,5 @@
- import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:molecule_viewer/global/globals.dart';
 
 import '../screens/control_mode_screen.dart';
 import '../services/api_service.dart';
@@ -22,11 +23,13 @@ class _AppBootstrapState extends State<AppBootstrap> {
 
   Future<void> boot() async {
     setState(() {
-      status = 'Loading structures and gesture engine...';
+      status = 'Loading structures...';
     });
 
+    await Global.getFolders();
+
     await ApiService.instance.initializeAppServices(
-      preloadMediaPipe: true,
+      preloadMediaPipe: false,
     );
 
     if (!mounted) return;
@@ -48,18 +51,11 @@ class _AppBootstrapState extends State<AppBootstrap> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.science,
-              size: 64,
-              color: Colors.white,
-            ),
+            const Icon(Icons.science, size: 64, color: Colors.white),
             const SizedBox(height: 24),
             const CircularProgressIndicator(),
             const SizedBox(height: 24),
-            Text(
-              status,
-              style: const TextStyle(fontSize: 18),
-            ),
+            Text(status, style: const TextStyle(fontSize: 18)),
           ],
         ),
       ),

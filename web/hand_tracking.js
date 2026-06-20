@@ -181,7 +181,13 @@ function getHandGesture() {
   };
 }
 
-function showCameraVideo() {
+async function showCameraVideoInContainer(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return false;
+
+  const ok = await initHandTracking();
+  if (!ok) return false;
+
   const video = document.getElementById("handTrackingVideo");
   if (!video) return false;
 
@@ -195,12 +201,20 @@ function showCameraVideo() {
   video.style.transform = "scaleX(-1)";
   video.style.pointerEvents = "none";
 
+  if (video.parentElement !== container) {
+    container.innerHTML = "";
+    container.appendChild(video);
+  }
+
   return true;
 }
 
 function hideCameraVideo() {
   const video = document.getElementById("handTrackingVideo");
-  if (!video) return false;
+
+  if (!video) {
+    return false;
+  }
 
   video.style.position = "fixed";
   video.style.left = "-9999px";
@@ -208,6 +222,26 @@ function hideCameraVideo() {
   video.style.width = "1px";
   video.style.height = "1px";
   video.style.opacity = "0";
+  video.style.pointerEvents = "none";
+
+  return true;
+}
+
+function showCameraVideo() {
+  const video = document.getElementById("handTrackingVideo");
+
+  if (!video) {
+    return false;
+  }
+
+  video.style.position = "fixed";
+  video.style.left = "0";
+  video.style.top = "0";
+  video.style.width = "100vw";
+  video.style.height = "100vh";
+  video.style.opacity = "1";
+  video.style.objectFit = "cover";
+  video.style.transform = "scaleX(-1)";
   video.style.pointerEvents = "none";
 
   return true;

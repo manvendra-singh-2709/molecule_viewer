@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:molecule_viewer/global/globals.dart';
 import 'package:molecule_viewer/screens/add_structure_screen.dart';
+import 'package:molecule_viewer/screens/delete_structure_screen.dart';
 import 'package:url_strategy/url_strategy.dart';
 
 import 'app/app_bootstrap.dart';
@@ -12,7 +13,7 @@ void main() async {
   setPathUrlStrategy();
 
   await SupabaseService.init();
-  
+  await Global.getFolders();
 
   runApp(const MoleculeViewerApp());
 }
@@ -22,7 +23,6 @@ class MoleculeViewerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Global.getFolders();
     return MaterialApp(
       title: 'Molecule Viewer',
       debugShowCheckedModeBanner: false,
@@ -30,6 +30,7 @@ class MoleculeViewerApp extends StatelessWidget {
       routes: {
         '/': (_) => const AppBootstrap(),
         '/add': (_) => const AddStructureScreen(),
+        '/delete': (_) => const DeleteStructureScreen(),
       },
       initialRoute: '/',
     );

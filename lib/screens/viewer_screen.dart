@@ -32,7 +32,7 @@ class _ViewerScreenState extends State<ViewerScreen> {
 
   final Map<String, Molecule> uploadedMolecules = {};
 
-  bool showCamera = true;
+  bool showCamera = false;
   bool isLoadingStructures = true;
   bool isLoadingMolecule = false;
 
@@ -52,12 +52,18 @@ class _ViewerScreenState extends State<ViewerScreen> {
     super.initState();
 
     folders = Global.folders;
-    folder = folders[0];
 
-    loadAvailableStructures(folder: folder);
+    if (folders.isNotEmpty) {
+      folder = folders.first;
+      loadAvailableStructures(folder: folder);
+    } else {
+      isLoadingStructures = false;
+    }
 
     if (widget.controlMode == ControlMode.airGrip) {
       gestureController.onGestureUpdate = (HandGesture gesture) {
+        if (!mounted) return;
+
         setState(() {
           moleculeScale = gesture.scale;
           rotationX = gesture.rotationX;
@@ -66,7 +72,9 @@ class _ViewerScreenState extends State<ViewerScreen> {
         });
       };
 
-      gestureController.start();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        gestureController.start();
+      });
     }
   }
 
